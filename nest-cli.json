@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/nutscrapi/src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/nutscrapi/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/nutscrapi",
+  "projects": {
+    "nutscrapejob": {
+      "type": "application",
+      "root": "apps/nutscrapejob",
+      "entryFile": "main",
+      "sourceRoot": "apps/nutscrapejob/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/nutscrapejob/tsconfig.app.json"
+      }
+    },
+    "nutscraper": {
+      "type": "application",
+      "root": "apps/nutscraper",
+      "entryFile": "main",
+      "sourceRoot": "apps/nutscraper/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/nutscraper/tsconfig.app.json"
+      }
+    },
+    "nutscrapi": {
+      "type": "application",
+      "root": "apps/nutscrapi",
+      "entryFile": "main",
+      "sourceRoot": "apps/nutscrapi/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/nutscrapi/tsconfig.app.json"
+      }
+    }
+  }
+}
