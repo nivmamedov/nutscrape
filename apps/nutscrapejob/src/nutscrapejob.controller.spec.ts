@@ -11,7 +11,9 @@ describe('NutscrapejobController', () => {
       providers: [NutscrapejobService],
     }).compile();
 
-    nutscrapejobController = app.get<NutscrapejobController>(NutscrapejobController);
+    nutscrapejobController = app.get<NutscrapejobController>(
+      NutscrapejobController,
+    );
   });
 
   describe('root', () => {

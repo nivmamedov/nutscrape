@@ -1,10 +1,10 @@
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { NutscraperModule } from './../src/nutscraper.module';
 
 describe('NutscraperController (e2e)', () => {
-  let app: INestApplication;
+  let app: NestExpressApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
