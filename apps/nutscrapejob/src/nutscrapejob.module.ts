@@ -1,10 +1,24 @@
+import { DatabaseModule } from '@app/nutscrapedb';
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { NutscrapejobController } from './nutscrapejob.controller';
-import { NutscrapejobService } from './nutscrapejob.service';
+import { ScrapeJobManagerModule } from './manager/manager.module';
 
 @Module({
-  imports: [],
-  controllers: [NutscrapejobController],
-  providers: [NutscrapejobService],
+  imports: [
+    DatabaseModule.forRoot({
+      connectionName: 'nutscrapejob',
+      uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/Nutscrape',
+    }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+    }),
+
+    ScrapeJobManagerModule,
+  ],
+  controllers: [],
+  providers: [],
 })
 export class NutscrapejobModule {}

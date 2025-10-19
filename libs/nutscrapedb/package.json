@@ -1,0 +1,16 @@
+{
+  "name": "@nutscrapi/nutscrapedb",
+  "version": "0.0.1",
+  "description": "Shared database module for NutScrape services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/mongoose": "^10.0.0",
+    "mongoose": "^8.0.0"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0"
+  }
+}

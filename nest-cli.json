@@ -5,11 +5,23 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/nutscrapi/tsconfig.app.json"
+    "tsConfigPath": "apps/nutscrapi/tsconfig.app.json",
+    "plugins": [
+      "@nestjs/swagger"
+    ]
   },
   "monorepo": true,
   "root": "apps/nutscrapi",
   "projects": {
+    "nutscrapedb": {
+      "type": "library",
+      "root": "libs/nutscrapedb",
+      "entryFile": "index",
+      "sourceRoot": "libs/nutscrapedb/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/nutscrapedb/tsconfig.lib.json"
+      }
+    },
     "nutscrapejob": {
       "type": "application",
       "root": "apps/nutscrapejob",

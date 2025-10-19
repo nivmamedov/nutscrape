@@ -21,6 +21,19 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "paths": {}
+    "paths": {
+      "@app/nutscrape": [
+        "libs/nutscrape/src"
+      ],
+      "@app/nutscrape/*": [
+        "libs/nutscrape/src/*"
+      ],
+      "@app/nutscrapedb": [
+        "libs/nutscrapedb/src"
+      ],
+      "@app/nutscrapedb/*": [
+        "libs/nutscrapedb/src/*"
+      ]
+    }
   }
 }
