@@ -21,7 +21,7 @@ import { JavaScriptCompatibleUserAgentConstraint } from './validators/javascript
 export class CreateScrapeDto {
   @ApiProperty({
     description: 'The URL to scrape',
-    example: 'https://example.com',
+    example: 'https://google.com',
   })
   @IsUrl()
   url: string;

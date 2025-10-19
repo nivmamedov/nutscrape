@@ -59,6 +59,35 @@ export class Scrape {
 
   @Prop()
   error?: string;
+
+  @Prop({ type: Number, default: 5 })
+  maxRetries?: number;
+
+  @Prop({ type: Number, default: 1000 })
+  retryBaseDelay?: number;
+
+  @Prop({ type: Number, default: 60000 })
+  retryMaxDelay?: number;
+
+  @Prop({ type: Number, default: 2 })
+  retryBackoffMultiplier?: number;
+
+  @Prop({ type: Boolean, default: true })
+  retryJitter?: boolean;
+
+  @Prop({ type: [Object], default: [] })
+  customRetryKeywords?: Array<{
+    keyword: string;
+    caseSensitive: boolean;
+    retryDelay: number;
+    backoffMultiplier: number;
+  }>;
+
+  @Prop({ type: Number, default: 0 })
+  retryAttempts?: number;
+
+  @Prop({ type: [String], default: [] })
+  retryReasons?: string[];
 }
 
 export const ScrapeSchema = SchemaFactory.createForClass(Scrape);

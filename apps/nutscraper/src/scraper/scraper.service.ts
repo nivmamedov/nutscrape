@@ -8,10 +8,14 @@ import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import { SocksProxyAgent } from 'socks-proxy-agent';
+import { RetryConfig } from './interfaces/retry-config.interface';
+import { RetryService } from './services/retry.service';
 
 @Injectable()
 export class ScraperService implements OnModuleDestroy {
   private browser: Browser | null = null;
+
+  constructor(private readonly retryService: RetryService) {}
 
   async scrape(
     url: string,
@@ -27,6 +31,7 @@ export class ScraperService implements OnModuleDestroy {
     blockFonts: boolean = false,
     retries: number = 3,
     proxy?: ProxyCredentials,
+    retryConfig?: Partial<RetryConfig>,
   ) {
     if (enableJavaScript && isApiClientUserAgent(userAgent)) {
       console.warn(
@@ -53,6 +58,7 @@ export class ScraperService implements OnModuleDestroy {
         maxRedirects,
         retries,
         proxy,
+        retryConfig,
       );
     } else {
       return this.staticScrape(
@@ -62,6 +68,7 @@ export class ScraperService implements OnModuleDestroy {
         maxRedirects,
         retries,
         proxy,
+        retryConfig,
       );
     }
   }
@@ -159,6 +166,7 @@ export class ScraperService implements OnModuleDestroy {
     maxRedirects: number = 5,
     retries: number = 3,
     proxy?: ProxyCredentials,
+    retryConfig?: Partial<RetryConfig>,
   ) {
     console.debug(
       `Starting static scraping for ${url} - FollowRedirects: ${followRedirects}, MaxRedirects: ${maxRedirects}, Retries: ${retries}`,
@@ -172,17 +180,51 @@ export class ScraperService implements OnModuleDestroy {
       proxy,
     );
 
-    try {
-      const response = await client.get(url);
-      console.debug(`Successfully scraped ${url} with static scraping`);
-      return { success: true, data: response.data, error: null };
-    } catch (error) {
-      const errorMessage = this.formatAxiosError(error);
-      console.error(
-        `Static scraping failed after ${retries} attempts for ${url}: ${errorMessage}`,
-      );
-      return { success: false, data: null, error: errorMessage };
+    let lastError: any = null;
+    const maxRetries = retryConfig?.maxRetries || retries;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const response = await client.get(url);
+        console.debug(
+          `Successfully scraped ${url} with static scraping (attempt ${attempt + 1})`,
+        );
+        return { success: true, data: response.data, error: null };
+      } catch (error) {
+        lastError = error;
+        const errorMessage = this.formatAxiosError(error);
+
+        // Use keyword-based retry analysis
+        const retryResult = this.retryService.analyzeError(
+          error,
+          attempt,
+          retryConfig,
+        );
+
+        if (!retryResult.shouldRetry) {
+          console.error(
+            `Static scraping failed after ${attempt + 1} attempts for ${url}: ${errorMessage}. ${retryResult.reason}`,
+          );
+          return { success: false, data: null, error: errorMessage };
+        }
+
+        console.warn(
+          `Static scraping attempt ${attempt + 1}/${maxRetries} failed for ${url}: ${errorMessage}. ${retryResult.reason}. Retrying in ${retryResult.delay}ms...`,
+        );
+
+        if (attempt < maxRetries - 1) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, retryResult.delay),
+          );
+        }
+      }
     }
+
+    const finalErrorMessage = this.formatAxiosError(lastError);
+    console.error(
+      `Static scraping failed after ${maxRetries} attempts for ${url}: ${finalErrorMessage}`,
+    );
+    return { success: false, data: null, error: finalErrorMessage };
   }
 
   private formatAxiosError(error: any): string {
@@ -219,12 +261,14 @@ export class ScraperService implements OnModuleDestroy {
     maxRedirects: number = 5,
     retries: number = 3,
     proxy?: ProxyCredentials,
+    retryConfig?: Partial<RetryConfig>,
   ) {
     console.debug(`Starting dynamic scraping for ${url} - Retries: ${retries}`);
 
     let lastError: any = null;
+    const maxRetries = retryConfig?.maxRetries || retries;
 
-    for (let attempt = 1; attempt <= retries; attempt++) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       let page: Page | null = null;
 
       try {
@@ -341,20 +385,36 @@ export class ScraperService implements OnModuleDestroy {
         return { success: true, data: html, error: null };
       } catch (error) {
         lastError = error;
-        console.warn(
-          `Dynamic scraping attempt ${attempt}/${retries} failed for ${url}:`,
-          error.message,
-        );
+        const errorMessage = error.message || 'Unknown error occurred';
 
+        // Check for non-retryable errors first
         if (error.message && error.message.includes('Maximum redirect limit')) {
           console.debug(`Not retrying due to redirect limit exceeded`);
           break;
         }
 
-        if (attempt < retries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-          console.debug(`Waiting ${delay}ms before retry...`);
-          await new Promise((resolve) => setTimeout(resolve, delay));
+        // Use keyword-based retry analysis
+        const retryResult = this.retryService.analyzeError(
+          error,
+          attempt - 1,
+          retryConfig,
+        );
+
+        if (!retryResult.shouldRetry) {
+          console.error(
+            `Dynamic scraping failed after ${attempt} attempts for ${url}: ${errorMessage}. ${retryResult.reason}`,
+          );
+          break;
+        }
+
+        console.warn(
+          `Dynamic scraping attempt ${attempt}/${maxRetries} failed for ${url}: ${errorMessage}. ${retryResult.reason}. Retrying in ${retryResult.delay}ms...`,
+        );
+
+        if (attempt < maxRetries) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, retryResult.delay),
+          );
         }
       } finally {
         if (page) {
@@ -365,7 +425,7 @@ export class ScraperService implements OnModuleDestroy {
 
     const errorMessage = lastError?.message || 'Unknown error occurred';
     console.error(
-      `Dynamic scraping failed after ${retries} attempts for ${url}: ${errorMessage}`,
+      `Dynamic scraping failed after ${maxRetries} attempts for ${url}: ${errorMessage}`,
     );
     return { success: false, data: null, error: errorMessage };
   }

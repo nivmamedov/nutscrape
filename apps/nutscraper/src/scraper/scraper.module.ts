@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScraperProcessor } from './scraper.processor';
 import { ScraperService } from './scraper.service';
+import { RetryService } from './services/retry.service';
 
 @Module({
   imports: [
@@ -15,6 +16,6 @@ import { ScraperService } from './scraper.service';
       name: 'scrapes',
     }),
   ],
-  providers: [ScraperProcessor, ScraperService],
+  providers: [ScraperProcessor, ScraperService, RetryService],
 })
 export class ScraperModule {}

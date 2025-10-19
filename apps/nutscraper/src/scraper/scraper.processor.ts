@@ -28,6 +28,16 @@ export class ScraperProcessor extends WorkerHost {
           console.error(`Scrape ${job.data.scrapeId} not found`);
           return;
         }
+        // Create retry configuration from scrape data
+        const retryConfig = {
+          maxRetries: scrape.maxRetries || 5,
+          baseDelay: scrape.retryBaseDelay || 1000,
+          maxDelay: scrape.retryMaxDelay || 60000,
+          backoffMultiplier: scrape.retryBackoffMultiplier || 2,
+          jitter: scrape.retryJitter ?? true,
+          keywords: scrape.customRetryKeywords || [],
+        };
+
         const result = await this.scraperService.scrape(
           scrape.url,
           scrape.userAgent,
@@ -42,6 +52,7 @@ export class ScraperProcessor extends WorkerHost {
           scrape.blockFonts ?? false,
           scrape.retries,
           job.data.proxy, // Pass proxy from MQ
+          retryConfig,
         );
 
         if (result.success) {

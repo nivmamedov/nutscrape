@@ -17,7 +17,7 @@ import {
 export class CreateStaticScrapeDto {
   @ApiProperty({
     description: 'The URL to scrape',
-    example: 'https://example.com',
+    example: 'https://google.com',
   })
   @IsUrl()
   url: string;
